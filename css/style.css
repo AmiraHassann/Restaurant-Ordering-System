@@ -359,6 +359,12 @@ img {
   padding: 0.9rem;
 }
 
+.menu-load-more-wrap {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
 .filter-group {
   display: flex;
   flex-wrap: wrap;
@@ -539,12 +545,30 @@ img {
   padding: 0.75rem;
 }
 
+.go-to-top {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border-radius: 50%;
+  z-index: 120;
+  box-shadow: var(--shadow);
+}
+
+.go-to-top i {
+  pointer-events: none;
+}
+
 .added-feedback {
   animation: pop 0.4s ease;
 }
 
 .about-section {
   padding-top: 0.3rem;
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 900px;
 }
 
 .about-grid {
@@ -709,6 +733,8 @@ img {
   color: #cbd5e1;
   margin-top: 1.4rem;
   background: linear-gradient(180deg, #111827, #0f172a);
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 520px;
 }
 
 .footer-grid {
@@ -858,6 +884,29 @@ html[data-theme="dark"] .footer-bottom {
 }
 
 @media (max-width: 760px) {
+  .site-header,
+  .hero-content,
+  .about-floating-card {
+    backdrop-filter: none;
+  }
+
+  .card,
+  .stat-card,
+  .about-highlight,
+  .cart-summary,
+  .checkout-card,
+  .order-summary,
+  .about-card,
+  .go-to-top {
+    box-shadow: none;
+  }
+
+  .card,
+  .hero-content,
+  .added-feedback {
+    animation: none;
+  }
+
   .nav-toggle {
     display: inline-flex;
   }
@@ -938,6 +987,14 @@ html[data-theme="dark"] .footer-bottom {
 
   .site-footer {
     text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
   }
 }
 

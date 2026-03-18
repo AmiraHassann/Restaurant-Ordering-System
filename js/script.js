@@ -122,13 +122,90 @@ function initializeMobileNav() {
   });
 }
 
+function renderSharedLayout() {
+  const page = document.body.dataset.page;
+  const header = document.getElementById("siteHeader");
+  const footer = document.getElementById("siteFooter");
+
+  const isActive = (name) => (page === name ? "active" : "");
+
+  if (header) {
+    header.className = "site-header";
+    header.innerHTML = `
+      <div class="container nav-wrap">
+        <a href="index.html" class="logo">Savoria</a>
+        <button class="nav-toggle" aria-label="Toggle navigation"><i class="fa-solid fa-bars"></i></button>
+        <nav class="site-nav" id="siteNav">
+          <a href="index.html" class="${isActive("home")}">Home</a>
+          <a href="menu.html" class="${isActive("menu")}">Menu</a>
+          <a href="cart.html" class="${isActive("cart")}">Cart <span class="badge" id="cartCount">0</span></a>
+          <a href="checkout.html" class="${isActive("checkout")}">Checkout</a>
+        </nav>
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
+      </div>
+    `;
+  }
+
+  if (footer) {
+    footer.className = "site-footer";
+    footer.innerHTML = `
+      <div class="container footer-grid">
+        <div class="footer-brand">
+          <a href="index.html" class="logo">Savoria</a>
+          <p>
+            Modern restaurant ordering experience with fresh flavors, fast delivery,
+            and a menu crafted for every craving.
+          </p>
+          <div class="footer-socials">
+            <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="#" aria-label="X"><i class="fa-brands fa-x-twitter"></i></a>
+          </div>
+        </div>
+
+        <div>
+          <h4>Quick Links</h4>
+          <div class="footer-links">
+            <a href="index.html">Home</a>
+            <a href="menu.html">Menu</a>
+            <a href="cart.html">Cart</a>
+            <a href="checkout.html">Checkout</a>
+          </div>
+        </div>
+
+        <div>
+          <h4>Contact</h4>
+          <div class="footer-details">
+            <p><i class="fa-solid fa-location-dot"></i> 24 Flavor Street, Cairo</p>
+            <p><i class="fa-solid fa-phone"></i> +20 100 123 4567</p>
+            <p><i class="fa-solid fa-envelope"></i> hello@savoria.com</p>
+          </div>
+        </div>
+
+        <div>
+          <h4>Opening Hours</h4>
+          <div class="footer-details">
+            <p>Mon - Thu: 10:00 AM - 11:00 PM</p>
+            <p>Fri - Sat: 12:00 PM - 1:00 AM</p>
+            <p>Sunday: 11:00 AM - 10:00 PM</p>
+          </div>
+        </div>
+      </div>
+      <div class="container footer-bottom">
+        <p>© 2026 Savoria Restaurant. All rights reserved.</p>
+        <p>Designed for a modern food ordering experience.</p>
+      </div>
+    `;
+  }
+}
+
 function createFoodCard(item) {
   const favorites = getFavorites();
   const isFavorite = favorites.includes(item.id);
 
   return `
     <article class="card">
-      <img src="${item.image}" alt="${item.name}" loading="lazy" />
+      <img src="${item.image}" alt="${item.name}" loading="lazy" decoding="async" fetchpriority="low" />
       <div class="card-body">
         <div class="card-head">
           <h3>${item.name}</h3>
@@ -214,9 +291,13 @@ function initializeMenuPage() {
   const searchInput = document.getElementById("menuSearch");
   const chips = Array.from(document.querySelectorAll(".chip"));
   const emptyState = document.getElementById("noResults");
+  const loadMoreBtn = document.getElementById("loadMoreBtn");
+  const initialItemsToShow = 6;
+  const itemsStep = 6;
 
   let activeFilter = "All";
   let searchQuery = "";
+  let visibleCount = initialItemsToShow;
 
   const render = () => {
     const filtered = menuItems.filter((item) => {
@@ -225,13 +306,22 @@ function initializeMenuPage() {
       return matchesCategory && matchesSearch;
     });
 
-    menuGrid.innerHTML = filtered.map(createFoodCard).join("");
+    const visibleItems = filtered.slice(0, visibleCount);
+    menuGrid.innerHTML = visibleItems.map(createFoodCard).join("");
     bindCardActions(menuGrid);
 
     if (filtered.length === 0) {
       emptyState.classList.remove("hidden");
     } else {
       emptyState.classList.add("hidden");
+    }
+
+    if (loadMoreBtn) {
+      if (filtered.length > visibleItems.length) {
+        loadMoreBtn.classList.remove("hidden");
+      } else {
+        loadMoreBtn.classList.add("hidden");
+      }
     }
   };
 
@@ -240,16 +330,46 @@ function initializeMenuPage() {
       chips.forEach((c) => c.classList.remove("active"));
       chip.classList.add("active");
       activeFilter = chip.dataset.filter;
+      visibleCount = initialItemsToShow;
       render();
     });
   });
 
   searchInput.addEventListener("input", (event) => {
     searchQuery = event.target.value;
+    visibleCount = initialItemsToShow;
     render();
   });
 
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener("click", () => {
+      visibleCount += itemsStep;
+      render();
+    });
+  }
+
   render();
+}
+
+function initializeGoToTopButton() {
+  const button = document.getElementById("goToTopBtn");
+  if (!button) return;
+
+  const toggleVisibility = () => {
+    if (window.scrollY > 260) {
+      button.classList.remove("hidden");
+    } else {
+      button.classList.add("hidden");
+    }
+  };
+
+  window.addEventListener("scroll", toggleVisibility, { passive: true });
+
+  button.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  toggleVisibility();
 }
 
 function renderCartItems() {
@@ -277,7 +397,7 @@ function renderCartItems() {
 
       return `
         <div class="cart-item">
-          <img src="${item.image}" alt="${item.name}" />
+          <img src="${item.image}" alt="${item.name}" loading="lazy" decoding="async" />
           <div>
             <p class="name">${item.name}</p>
             <p>${formatPrice(item.price)}</p>
@@ -372,6 +492,7 @@ function initializeCheckout() {
 }
 
 function initializePage() {
+  renderSharedLayout();
   updateCartCount();
   initializeTheme();
   initializeMobileNav();
@@ -386,6 +507,7 @@ function initializePage() {
 
   if (page === "menu") {
     initializeMenuPage();
+    initializeGoToTopButton();
   }
 
   if (page === "cart") {
